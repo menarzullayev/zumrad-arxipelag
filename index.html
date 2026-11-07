@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Zumrad arxipelag</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <style>
+    :root {
+      --ink: #eef6f4; --ink-dim: #b3c7c3;
+      --glass: rgba(6, 22, 26, 0.5); --edge: rgba(200, 240, 232, 0.16);
+      --accent: #6fe6cc; --accent-ink: #052520; --night: #041114;
+      --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+      --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+      color-scheme: dark;
+    }
+    html, body { margin: 0; height: 100%; background: var(--night); color: var(--ink); font-family: var(--display); overflow: hidden; }
+    #c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+    .hud { position: fixed; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between;
+      padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+    .card { pointer-events: auto; background: var(--glass); border: 1px solid var(--edge); border-radius: 14px;
+      backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2); }
+    .brand { padding: 12px 16px; width: fit-content; max-width: 24rem; }
+    .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+    h1 { margin: 4px 0 2px; font-size: clamp(26px, 4vw, 40px); line-height: 1; letter-spacing: -.02em; }
+    .brand p { margin: 0; color: var(--ink-dim); font-size: 13.5px; line-height: 1.4; }
+    .bar { display: flex; gap: 12px; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; }
+    .shot { padding: 12px 14px; min-width: 240px; flex: 1 1 260px; max-width: 420px; display: grid; gap: 8px; }
+    .shot-name { font-size: 15px; font-weight: 500; }
+    .shot-meta { font-family: var(--mono); font-size: 11.5px; color: var(--ink-dim); display: flex; justify-content: space-between; }
+    .track { height: 3px; background: rgba(255,255,255,.12); border-radius: 2px; overflow: hidden; }
+    .track i { display: block; height: 100%; width: 0; background: var(--accent); }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .controls { padding: 12px 14px; display: grid; gap: 10px; width: min(330px, 100%); }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    button { font: 500 13px/1 var(--display); color: var(--ink); background: rgba(255,255,255,.07); border: 1px solid var(--edge);
+      border-radius: 999px; padding: 8px 12px; cursor: pointer; }
+    button:hover { background: rgba(255,255,255,.14); }
+    button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+    button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .chips button { font-size: 12px; padding: 6px 10px; }
+    label { font-size: 13px; }
+    .ctl-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+    output { font-family: var(--mono); font-size: 11.5px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+    input[type=range] { width: 100%; accent-color: var(--accent); margin: 0; }
+    .stats { font-family: var(--mono); font-size: 11px; color: var(--ink-dim); }
+    #loading { position: fixed; inset: 0; display: grid; place-items: center; background: var(--night); z-index: 5; transition: opacity .8s; }
+    #loading.done { opacity: 0; pointer-events: none; }
+    .load-box { width: min(320px, 80vw); display: grid; gap: 10px; font-family: var(--mono); font-size: 12.5px; color: var(--ink-dim); }
+    .load-box .track { height: 4px; }
+    #err { color: #ffb4a8; }
+    @media (max-width: 640px) { .brand p, .stats { display: none; } .controls { width: 100%; } }
+  </style>
+</head>
+<body>
+  <canvas id="c" aria-label="Arxipelag, okean va qayiqning 3D sahnasi"></canvas>
+  <div id="loading"><div class="load-box"><span id="loadText">Assetlar yuklanmoqda…</span><div class="track"><i id="loadBar"></i></div><span id="err"></span></div></div>
+  <div class="hud">
+    <header class="card brand">
+      <div class="eyebrow">Three.js · WebGL2</div>
+      <h1>Zumrad arxipelag</h1>
+      <p>Gerstner spektrli okean, refraction va caustics, ohaktosh orollar, to'lqinda chayqaladigan qayiq.</p>
+    </header>
+    <div class="bar">
+      <section class="card shot" aria-live="polite">
+        <div class="shot-meta"><span id="shotIdx">Kadr 1 / 6</span><span id="mode">Kino rejimi</span></div>
+        <div class="shot-name" id="shotName">—</div>
+        <div class="track"><i id="shotBar"></i></div>
+        <div class="chips" id="chips"></div>
+      </section>
+      <section class="card controls" aria-label="Boshqaruv">
+        <div class="row">
+          <button type="button" id="btnCine" aria-pressed="true">Kino</button>
+          <button type="button" id="btnFree" aria-pressed="false">Erkin kamera</button>
+          <button type="button" id="btnBoat" aria-pressed="false">Qayiqni kuzatish</button>
+        </div>
+        <div>
+          <div class="ctl-head"><label for="sea">Dengiz holati</label><output id="seaOut" for="sea">—</output></div>
+          <input id="sea" type="range" min="0" max="6" step="1" value="3">
+        </div>
+        <div class="stats" id="stats">—</div>
+      </section>
+    </div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
