@@ -45,6 +45,8 @@
     .ctl-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
     output { font-family: var(--mono); font-size: 11.5px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
     input[type=range] { width: 100%; accent-color: var(--accent); margin: 0; }
+    .vol { flex: 1 1 80px; min-width: 80px; width: auto; }
+    .vol-label { font-size: 12px; color: var(--ink-dim); }
     .stats { font-family: var(--mono); font-size: 11px; color: var(--ink-dim); }
     #loading { position: fixed; inset: 0; display: grid; place-items: center; background: var(--night); z-index: 5; transition: opacity .8s; }
     #loading.done { opacity: 0; pointer-events: none; }
@@ -79,6 +81,11 @@
         <div>
           <div class="ctl-head"><label for="sea">Dengiz holati</label><output id="seaOut" for="sea">—</output></div>
           <input id="sea" type="range" min="0" max="6" step="1" value="3">
+        </div>
+        <div class="row">
+          <button type="button" id="btnSound" aria-pressed="false">Ovozni yoqish</button>
+          <label for="vol" class="vol-label">Balandlik</label>
+          <input id="vol" type="range" min="0" max="1.2" step="0.01" value="0.8" class="vol">
         </div>
         <div class="stats" id="stats">—</div>
       </section>

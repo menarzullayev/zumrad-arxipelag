@@ -13,6 +13,7 @@ import { createTerrainMaterial, buildTerrain, buildFarIslets, buildShoreRocks, t
 import { buildBoat, BoatSim } from './boat.js';
 import { buildShots, Director } from './cinematic.js';
 import { LookShader } from './post.js';
+import { SoundScape } from './audio.js';
 
 const $ = (id) => document.getElementById(id);
 const loadText = $('loadText'), loadBar = $('loadBar');
@@ -235,6 +236,19 @@ async function main() {
   };
   sea.addEventListener('input', setSea); setSea();
 
+  // sound: browsers only allow audio after a user gesture, so it starts from the button
+  const audio = new SoundScape({ waves, boatSim, terrainHeight });
+  const btnSound = $('btnSound'), vol = $('vol');
+  btnSound.onclick = async () => {
+    if (audio.on) { audio.disable(); btnSound.setAttribute('aria-pressed', 'false'); btnSound.textContent = 'Ovozni yoqish'; return; }
+    btnSound.textContent = 'Ovoz yuklanmoqda…';
+    try {
+      await audio.enable();
+      btnSound.setAttribute('aria-pressed', 'true'); btnSound.textContent = "Ovozni o'chirish";
+    } catch (e) { btnSound.textContent = 'Ovoz yuklanmadi'; console.error(e); }
+  };
+  vol.addEventListener('input', () => audio.setVolume(+vol.value));
+
   // frame loop
   const clock = new THREE.Clock();
   let lodTimer = 0;
@@ -283,8 +297,10 @@ async function main() {
     // underwater state
     const surf = waves.heightAt(camera.position.x, camera.position.z, t);
     const under = camera.position.y < surf - 0.05;
-    if (wasUnder && !under) drops = 1;
+    const entered = !wasUnder && under, exited = wasUnder && !under;
+    if (exited) drops = 1;
     wasUnder = under;
+    audio.update(dt, camera, { under, entered, exited, seaStrength: waves.strength, time: t, gullCenter: ISLANDS.beach });
     drops = Math.max(0, drops - dt * 0.32);
     shared.uUnder.value = under ? 1 : 0;
     waterPass.under = under;
@@ -312,7 +328,7 @@ async function main() {
       const info = renderer.info.render;
       $('stats').textContent = `${fps.toFixed(0)} FPS · ${(info.triangles / 1e6).toFixed(2)} M uchburchak · ${info.calls} draw call`; }
   });
-  window.__orol = { renderer, scene, camera, waves, boatSim, director, setMode };
+  window.__orol = { renderer, scene, camera, waves, boatSim, director, setMode, audio };
 }
 
 main().catch(e => fail(`Xato: ${e.message}`, e));
